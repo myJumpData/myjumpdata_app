@@ -43,7 +43,7 @@ export default function CounterScreen({navigation, route}) {
               setCount(0);
             }}>
             <Ionicons
-              name="Ionicons/refresh-outline"
+              name="refresh-outline"
               size={40}
               color={isDarkMode ? Colors.white : Colors.black}
             />
@@ -59,7 +59,7 @@ export default function CounterScreen({navigation, route}) {
               }
             }}>
             <Ionicons
-              name="Ionicons/radio"
+              name="radio"
               size={40}
               color={
                 newKey === '' || newCode === ''

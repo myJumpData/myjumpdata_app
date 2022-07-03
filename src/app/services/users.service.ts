@@ -1,27 +1,35 @@
-import api from "./api";
-const updateUsersRole = (roles: string[]) => {
-  return api.put("/users/role", { roles: roles });
-};
+import api from './api';
+
 const searchUsers = (search: string) => {
-  const s = search.replace(/^[^A-Z\d]+$/i, "");
-  if (s === "") {
-    return Promise.resolve({ status: 200, data: null });
+  const s = search.replace(/^[^A-Z\d]+$/i, '');
+  if (s === '') {
+    return Promise.resolve({status: 200, data: null});
   }
   return api.get(`/users/${s}`);
 };
-const updateUser = (userData) => {
-  return api.post("/user_edit", userData);
+const searchUsersAll = (search: string) => {
+  const s = search.replace(/^[^A-Z\d]+$/i, '');
+  if (s === '') {
+    return Promise.resolve({status: 200, data: null});
+  }
+  return api.get(`/users_all/${s}`);
 };
+
+const updateUser = userData => {
+  return api.post('/user_edit', userData);
+};
+
 const deleteUser = () => {
-  return api.post("/user_del");
+  return api.post('/user_del');
 };
+
 function getUserSearch(search: string) {
   return api.get(`/user/${search}`);
 }
 
 const UsersService = {
   getUserSearch,
-  updateUsersRole,
+  searchUsersAll,
   searchUsers,
   updateUser,
   deleteUser,

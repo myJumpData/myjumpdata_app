@@ -11,5 +11,5 @@ import Main from './src/main';
 
 enableScreens();
 
-TrackPlayer.registerPlaybackService(() => require('./src/service'));
 AppRegistry.registerComponent(appName, () => Main);
+TrackPlayer.registerPlaybackService(() => require('./src/service'));

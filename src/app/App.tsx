@@ -65,28 +65,6 @@ export default function App() {
     }
   }, [user]);
 
-  React.useEffect(() => {
-    TrackPlayer.setupPlayer({})
-      .then(() => {
-        TrackPlayer.updateOptions({
-          capabilities: [Capability.Play, Capability.Pause, Capability.Stop],
-        }).catch(error => {
-          console.log(error);
-        });
-        TrackPlayer.setRepeatMode(RepeatMode.Off).catch(error => {
-          console.log(error);
-        });
-      })
-      .catch(error => {
-        console.log(error);
-      });
-    return () => {
-      TrackPlayer.destroy().catch(error => {
-        console.log(error);
-      });
-    };
-  }, []);
-
   return (
     <NavigationContainer
       initialState={navigation}

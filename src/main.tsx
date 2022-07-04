@@ -14,9 +14,9 @@ export default function Main() {
         flex: 1,
         backgroundColor: isDarkMode ? Colors.black : Colors.white,
       }}>
-      <React.Suspense fallback={<LoadingScreen />}>
+      <React.Suspense fallback={<LoadingScreen/>}>
         <StoreProvider>
-          <App />
+          <App/>
         </StoreProvider>
       </React.Suspense>
     </GestureHandlerRootView>

@@ -1,6 +1,5 @@
 import BottomSheet from '@gorhom/bottom-sheet';
-import {useIsFocused} from '@react-navigation/native';
-import React, {useState} from 'react';
+import React from 'react';
 import {useTranslation} from 'react-i18next';
 import {
   FlatList,
@@ -12,6 +11,7 @@ import {
 } from 'react-native';
 import {TouchableOpacity} from 'react-native-gesture-handler';
 import Ionicons from 'react-native-vector-icons/Ionicons';
+import {useQuery} from 'react-query';
 import {useSelector} from 'react-redux';
 import {BottomSheetNavList} from '../components/BottomSheetNav';
 import StyledBottomSheet from '../components/StyledBottomSheet';
@@ -25,62 +25,77 @@ import {
 import {StyledView} from '../components/StyledView';
 import Wrapper from '../components/Wrapper';
 import {Colors} from '../Constants';
-import GroupsService from '../services/groups.service';
-import TeamService from '../services/team.service';
+import useRefreshOnFocus from '../hooks/useRefreshOnFocus';
+import GroupsService, {getClub, getGroups} from '../services/groups.service';
+import TeamService, {getTeams} from '../services/team.service';
 
 export default function GroupsScreen({navigation}) {
-  const isFocused = useIsFocused();
   const user = useSelector((state: any) => state.user);
   const {t} = useTranslation();
-  const [groups, setGroups] = React.useState([]);
-  const [teams, setTeams] = React.useState([]);
   const isDarkMode = useColorScheme() === 'dark';
 
-  const [refreshing, setRefreshing] = React.useState(false);
   const [current, setCurrent] = React.useState<any>();
-  const [club, setClub] = useState<any>();
+
+  const {
+    isFetching: isFetchingClub,
+    data: dataClub,
+    isSuccess: isSuccessClub,
+    refetch: refetchClub,
+  } = useQuery(['club'], async () => {
+    return await getClub();
+  });
+  const {
+    isFetching: isFetchingGroups,
+    data: dataGroups,
+    isSuccess: isSuccessGroups,
+    refetch: refetchGroups,
+  } = useQuery(['groups'], async () => {
+    return await getGroups();
+  });
+  const {
+    isFetching: isFetchingTeams,
+    data: dataTeams,
+    isSuccess: isSuccessTeams,
+    refetch: refetchTeams,
+  } = useQuery(['teams'], async () => {
+    return await getTeams();
+  });
+
+  const isFetching = isFetchingClub || isFetchingGroups || isFetchingTeams;
+  const isSuccess = isSuccessClub && isSuccessGroups && isSuccessTeams;
 
   const bottomSheetRef = React.useRef<BottomSheet>(null);
   const snapPoints = React.useMemo(() => {
     if (current?.group) {
-      return club &&
-        [...club.coaches, ...club.admins].some((i: any) => i._id === user.id) &&
+      return dataClub?.data &&
+        [...dataClub?.data.coaches, ...dataClub?.data.admins].some(
+          (i: any) => i._id === user.id,
+        ) &&
         current?.coaches.some((i: any) => i._id === user.id)
         ? [380]
         : [200];
     }
     return [200];
-  }, [club, current?.coaches, current?.group, user.id]);
+  }, [dataClub, current?.coaches, current?.group, user.id]);
   const bottomSheetRefLeave = React.useRef<BottomSheet>(null);
   const snapPointsLeave = React.useMemo(() => {
     return [200];
   }, []);
 
-  function getGroups() {
-    GroupsService.getClub().then(response => {
-      setClub(response.data);
-    });
-    GroupsService.getGroups().then((response: any) => {
-      setGroups(response.data);
-      setRefreshing(false);
-    });
-    TeamService.getTeams().then((response: any) => {
-      setTeams(response.data);
-    });
-    setRefreshing(false);
-  }
-
   const onRefresh = React.useCallback(() => {
-    setRefreshing(true);
-    getGroups();
+    return Promise.all([refetchClub(), refetchGroups(), refetchTeams()]);
   }, []);
+
+  useRefreshOnFocus(onRefresh);
 
   React.useEffect(() => {
     navigation.setOptions({
       headerRight: () => {
         if (
-          club &&
-          [...club.coaches, ...club.admins].some((i: any) => i._id === user.id)
+          dataClub?.data &&
+          [...dataClub?.data.coaches, ...dataClub?.data.admins].some(
+            (i: any) => i._id === user.id,
+          )
         ) {
           return (
             <Ionicons
@@ -95,17 +110,7 @@ export default function GroupsScreen({navigation}) {
         return;
       },
     });
-  }, [club, isDarkMode, navigation, user.id]);
-
-  React.useEffect(() => {
-    if (isFocused) {
-      getGroups();
-    }
-  }, [isFocused]);
-
-  React.useEffect(() => {
-    getGroups();
-  }, []);
+  }, [dataClub, isDarkMode, navigation, user.id]);
 
   const renderItem = ({item}) => (
     <TouchableOpacity
@@ -311,7 +316,7 @@ export default function GroupsScreen({navigation}) {
           <StyledBottomSheet
             ref={bottomSheetRefLeave}
             snapPoints={snapPointsLeave}>
-            {club ? (
+            {dataClub?.data ? (
               <>
                 <StyledText
                   style={{fontWeight: '900', fontSize: 24, marginBottom: 15}}>
@@ -331,11 +336,11 @@ export default function GroupsScreen({navigation}) {
           </StyledBottomSheet>
         </>
       }>
-      {club ? (
+      {isSuccess ? (
         <View style={{flexDirection: 'row', alignItems: 'center'}}>
           <TouchableOpacity
             onPress={() => {
-              navigation.navigate('club', {id: club._id});
+              navigation.navigate('club', {id: dataClub?.data?._id});
             }}>
             <View style={{flexDirection: 'row', alignItems: 'center'}}>
               <Image
@@ -344,20 +349,32 @@ export default function GroupsScreen({navigation}) {
                   height: 50,
                   marginRight: 10,
                 }}
-                source={{uri: club.logo}}
+                source={{uri: dataClub?.data?.logo}}
               />
               <View>
-                <StyledText>{club.name}</StyledText>
+                <StyledText>{dataClub?.data?.name}</StyledText>
                 <StyledShyText>
                   {(() => {
                     let tmp: string[] = [];
-                    if (club.coaches?.some((e: any) => e._id === user.id)) {
+                    if (
+                      dataClub?.data?.coaches?.some(
+                        (e: any) => e._id === user.id,
+                      )
+                    ) {
                       tmp = [...tmp, 'Coach'];
                     }
-                    if (club.athletes?.some((e: any) => e._id === user.id)) {
+                    if (
+                      dataClub?.data?.athletes?.some(
+                        (e: any) => e._id === user.id,
+                      )
+                    ) {
                       tmp = [...tmp, 'Athlete'];
                     }
-                    if (club.admins?.some((e: any) => e._id === user.id)) {
+                    if (
+                      dataClub?.data?.admins?.some(
+                        (e: any) => e._id === user.id,
+                      )
+                    ) {
                       tmp = [...tmp, 'Admin'];
                     }
                     return tmp;
@@ -379,14 +396,14 @@ export default function GroupsScreen({navigation}) {
           </TouchableOpacity>
         </View>
       ) : null}
-      {club ? (
+      {isSuccess ? (
         <FlatList
           renderItem={renderItem}
           data={[
-            ...groups.map((e: any[]) => ({...e, group: true})),
-            ...teams.map((e: any[]) => ({...e, team: true})),
+            ...dataGroups?.data.map((e: any[]) => ({...e, group: true})),
+            ...dataTeams?.data.map((e: any[]) => ({...e, team: true})),
           ]}
-          refreshing={refreshing}
+          refreshing={isFetching}
           onRefresh={onRefresh}
           ItemSeparatorComponent={() => (
             <StyledView
@@ -397,7 +414,7 @@ export default function GroupsScreen({navigation}) {
       ) : (
         <ScrollView
           refreshControl={
-            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+            <RefreshControl refreshing={isFetching} onRefresh={onRefresh} />
           }>
           <StyledShyText style={{marginBottom: 5, fontSize: 20}}>
             {t('club_notfound')}

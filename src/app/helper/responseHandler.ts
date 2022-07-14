@@ -1,7 +1,7 @@
-import { AxiosResponse } from "axios";
-import i18next from "i18next";
-import { ToastAndroid } from "react-native";
-import { clearUser } from "../redux/user.action";
+import {AxiosResponse} from 'axios';
+import i18next from 'i18next';
+import {Platform, ToastAndroid} from 'react-native';
+import {clearUser} from '../redux/user.action';
 
 export interface responseHandlerType {
   status: number;
@@ -11,7 +11,7 @@ export interface responseHandlerType {
 }
 
 export default async function responseHandler(
-  res: AxiosResponse | Promise<any>
+  res: AxiosResponse | Promise<any>,
 ) {
   const response = await res;
   const message_key: string = response?.data?.message?.key;
@@ -21,10 +21,13 @@ export default async function responseHandler(
       : response?.data?.message?.text;
 
   if (message_text) {
-    ToastAndroid.show(message_text, ToastAndroid.SHORT);
+    console.warn(message_text);
+    if (Platform.OS === 'android') {
+      ToastAndroid.show(message_text, ToastAndroid.SHORT);
+    }
   }
 
-  if (message_key === "unauthorized.accesstoken") {
+  if (message_key === 'unauthorized.accesstoken') {
     clearUser();
     return;
   }

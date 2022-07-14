@@ -86,6 +86,10 @@ export default function GroupsScreen({navigation}) {
     return Promise.all([refetchClub(), refetchGroups(), refetchTeams()]);
   }, []);
 
+  React.useEffect(() => {
+    console.log(dataClub);
+  }, [dataClub]);
+
   useRefreshOnFocus(onRefresh);
 
   React.useEffect(() => {
@@ -336,7 +340,7 @@ export default function GroupsScreen({navigation}) {
           </StyledBottomSheet>
         </>
       }>
-      {isSuccess ? (
+      {dataClub?.data && isSuccess ? (
         <View style={{flexDirection: 'row', alignItems: 'center'}}>
           <TouchableOpacity
             onPress={() => {
@@ -396,7 +400,7 @@ export default function GroupsScreen({navigation}) {
           </TouchableOpacity>
         </View>
       ) : null}
-      {isSuccess ? (
+      {dataClub?.data && isSuccess ? (
         <FlatList
           renderItem={renderItem}
           data={[

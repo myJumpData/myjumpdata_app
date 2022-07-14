@@ -1,6 +1,12 @@
 import NetInfo from '@react-native-community/netinfo';
 import * as React from 'react';
-import {AppState, AppStateStatus, Platform, useColorScheme} from 'react-native';
+import {
+  AppState,
+  AppStateStatus,
+  Platform,
+  SafeAreaView,
+  useColorScheme,
+} from 'react-native';
 import {GestureHandlerRootView} from 'react-native-gesture-handler';
 import {
   focusManager,
@@ -12,6 +18,8 @@ import App from './app/App';
 import LoadingScreen from './app/components/LoadingScreen';
 import {Colors} from './app/Constants';
 import StoreProvider from './app/redux/StoreProvider';
+import Ionicons from 'react-native-vector-icons/Ionicons';
+import FontAwesome from 'react-native-vector-icons/FontAwesome';
 
 const queryClient = new QueryClient();
 
@@ -23,6 +31,13 @@ export default function Main() {
       focusManager.setFocused(status === 'active');
     }
   }
+
+  React.useEffect(() => {
+    if (Platform.OS === 'ios') {
+      Ionicons.loadFont();
+      FontAwesome.loadFont();
+    }
+  }, []);
 
   React.useEffect(() => {
     const subscription = AppState.addEventListener('change', onAppStateChange);
@@ -50,7 +65,9 @@ export default function Main() {
         }}>
         <React.Suspense fallback={<LoadingScreen />}>
           <StoreProvider>
-            <App />
+            <SafeAreaView style={{flex: 1}}>
+              <App />
+            </SafeAreaView>
           </StoreProvider>
         </React.Suspense>
       </GestureHandlerRootView>

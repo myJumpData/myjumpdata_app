@@ -1,11 +1,11 @@
-import { StyledScrollView, StyledView } from "./StyledView";
-import { RefreshControlProps, View } from "react-native";
-import React, { ReactNode } from "react";
-import Player from "./Player";
+import {StyledScrollView, StyledView} from './StyledView';
+import {RefreshControlProps, View} from 'react-native';
+import React, {ReactNode} from 'react';
+import Player from './Player';
 import TrackPlayer, {
   Event,
   useTrackPlayerEvents,
-} from "react-native-track-player";
+} from 'react-native-track-player';
 
 const events = [
   Event.PlaybackState,
@@ -36,7 +36,7 @@ export default function Wrapper({
   const Component = as;
 
   React.useEffect(() => {
-    TrackPlayer.getQueue().then((q) => {
+    TrackPlayer.getQueue().then(q => {
       if (q.length > 0) {
         setVisible(true);
       } else {
@@ -45,10 +45,10 @@ export default function Wrapper({
     });
   }, []);
 
-  useTrackPlayerEvents(events, async (event) => {
+  useTrackPlayerEvents(events, async event => {
     if (event.type === Event.PlaybackError) {
       // eslint-disable-next-line no-console
-      console.warn("An error occurred while playing the current track.");
+      console.warn('An error occurred while playing the current track.');
     }
     if (event.type === Event.PlaybackState) {
       const q = await TrackPlayer.getQueue();
@@ -61,26 +61,24 @@ export default function Wrapper({
   });
 
   return (
-    <StyledView style={{ flex: 1 }}>
+    <StyledView style={{flex: 1}}>
       <Component refreshControl={refreshControl}>
         <View
           style={{
             padding: 16,
             paddingBottom: visible ? 100 : 10,
             flex: 1,
-          }}
-        >
+          }}>
           {children}
         </View>
       </Component>
       <View
         style={{
           padding: 10,
-          position: "absolute",
+          position: 'absolute',
           bottom: 0,
-          width: "100%",
-        }}
-      >
+          width: '100%',
+        }}>
         <Player />
       </View>
       {outside}
